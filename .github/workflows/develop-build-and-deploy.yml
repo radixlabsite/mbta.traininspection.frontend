@@ -18,7 +18,7 @@ jobs:
     name: 🏗️ Build Frontend Applications
     runs-on: ubuntu-latest
     environment: dev
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -90,7 +90,7 @@ jobs:
     needs: build
     timeout-minutes: 10
     environment: dev
-    
+
     steps:
       - name: Download mobile artifacts
         uses: actions/download-artifact@v4
@@ -112,12 +112,6 @@ jobs:
           echo "📁 Listing contents of web:"
           ls -R ./web || echo "No files found or directory missing"
 
-          echo "📄 Sample files in mobile:"
-          find ./mobile -type f | head -10
-
-          echo "📄 Sample files in web:"
-          find ./web -type f | head -10
-
       - name: Configure AWS credentials  via OIDC
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -135,7 +129,6 @@ jobs:
         run: |
           aws s3 cp --recursive ./web/ s3://${{ vars.BUCKET_NAME_WEB }}/
 
-
   invalidate-cloudfront:
     name: 🚀 Invalidate CloudFront Cache
     runs-on: ubuntu-latest
@@ -152,4 +145,4 @@ jobs:
         run: |
           aws cloudfront create-invalidation \
             --distribution-id ${{ vars.CF_DISTRIBUTION_ID }} \
-            --paths "/*"          
+            --paths "/*"
