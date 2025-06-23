@@ -1,11 +1,9 @@
-# .github/workflows/main-ci-cd.yml (CORRIGIDO)
-name: ⚙️ CI/CD - Frontend Applications
-
+name: ⚙️ CI/CD - Frontend Applications Production
+ 
 on:
   workflow_dispatch: {}
   push:
     branches:
-      - develop
       - main
 
 permissions:
@@ -13,16 +11,6 @@ permissions:
   contents: read
 
 jobs:
-  # Job para o ambiente de Desenvolvimento
-  run-dev-workflow:
-    if: github.ref == 'refs/heads/develop'
-    name: 🚀 Deploy to Development
-    uses: ./.github/workflows/reusable-build-deploy.yml
-    with:
-      environment-name: dev
-    secrets:
-      AWS_ROLE_TO_ASSUME: ${{ secrets.AWS_ROLE_TO_ASSUME_DEV }}
-
   # Job para o ambiente de Produção
   run-prd-workflow:
     if: github.ref == 'refs/heads/main'

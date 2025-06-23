@@ -1,0 +1,23 @@
+name: ⚙️ CI/CD - Frontend Applications Development
+
+on:
+  workflow_dispatch: {}
+  push:
+    branches:
+      - develop
+      
+
+permissions:
+  id-token: write # Required for OIDC
+  contents: read
+
+jobs:
+  # Job para o ambiente de Desenvolvimento
+  run-dev-workflow:
+    if: github.ref == 'refs/heads/develop'
+    name: 🚀 Deploy to Development
+    uses: ./.github/workflows/reusable-build-deploy.yml
+    with:
+      environment-name: dev
+    secrets:
+      AWS_ROLE_TO_ASSUME: ${{ secrets.AWS_ROLE_TO_ASSUME_DEV }}
