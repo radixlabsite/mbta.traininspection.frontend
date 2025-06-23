@@ -1,5 +1,5 @@
 # .github/workflows/main-ci-cd.yml (CORRIGIDO)
-name: CI/CD - Frontend Applications
+name: ⚙️ CI/CD - Frontend Applications
 
 on:
   workflow_dispatch: {}
