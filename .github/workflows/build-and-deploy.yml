@@ -1,10 +1,11 @@
 name: Build and Deploy to S3
 
 on:
+  workflow_dispatch:  # Permite execução manual
   push:
     branches:
       - develop
-  workflow_dispatch:  # Permite execução manual
+
 
 env:
   YARN_CACHE_FOLDER: .yarn
