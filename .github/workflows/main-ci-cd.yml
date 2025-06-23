@@ -1,4 +1,4 @@
-# .github/workflows/main-ci-cd.yml
+# .github/workflows/main-ci-cd.yml (CORRIGIDO)
 name: CI/CD - Frontend Applications
 
 on:
@@ -11,31 +11,23 @@ on:
 jobs:
   # Job para o ambiente de Desenvolvimento
   run-dev-workflow:
-    # Só executa em push para o branch 'develop'
     if: github.ref == 'refs/heads/develop'
     name: 🚀 Deploy to Development
     uses: ./.github/workflows/reusable-build-deploy.yml
     with:
-      # Passa o nome do ambiente para o workflow reutilizável
       environment-name: dev
     secrets:
-      # Passa o secret do ambiente de 'dev' para o workflow reutilizável
-      # Este secret deve ser configurado no ambiente 'dev' do repositório
       AWS_ROLE_TO_ASSUME: ${{ secrets.AWS_ROLE_TO_ASSUME_DEV }}
 
   # Job para o ambiente de Produção
   run-prd-workflow:
-    # Só executa em push para o branch 'main'
     if: github.ref == 'refs/heads/main'
     name: 🚀 Deploy to Production
-    # Adiciona um passo de aprovação manual para deploys em produção
-    environment: production
+    # A linha "environment: production" foi REMOVIDA daqui.
+    # A regra de aprovação será acionada porque o workflow reutilizável
+    # usa o input 'prd' para definir o ambiente internamente.
     uses: ./.github/workflows/reusable-build-deploy.yml
     with:
-      # Passa o nome do ambiente 'prd'
       environment-name: prd
     secrets:
-      # Passa o secret do ambiente de 'prd'
-      # Este secret deve ser configurado no ambiente 'prd' do repositório
       AWS_ROLE_TO_ASSUME: ${{ secrets.AWS_ROLE_TO_ASSUME_PRD }}
-
