@@ -1,0 +1,139 @@
+trigger:
+  branches:
+    include:
+      - devops-entraid-v3
+
+pool:
+  vmImage: ubuntu-latest
+
+variables:
+  YARN_CACHE_FOLDER: $(Pipeline.Workspace)/s/.yarn
+  AWS_REGION: 'us-east-1'
+  BUCKET_NAME_MOBILE: 'mobile-dev-rdi-mbta'
+  BUCKET_NAME_WEB: 'web-dev-rdi-mbta'
+  AWS_CREDENTIALS_ACCOUNT: 'mbta-dev'
+
+  ENTRA_CLIENT_ID: '2f24db68-3efb-49bd-8147-12b22cc66f58'
+  ENTRA_AUTHORITY: 'https://login.microsoftonline.com/e3321345-9cfc-4d86-bb58-b5c71da0329d'
+  ENTRA_REDIRECT_URI: 'https://web.dev-rdi.radixlabs.site'
+  ENTRA_POST_LOGOUT_URI: '/login'
+  ENTRA_SCOPE_BACKEND: 'api://62adb8df-d29a-4c85-854a-414b5d340af5/.default'
+  API_BASE_URL: 'https://backend.dev-rdi.radixlabs.site/api'
+  
+
+stages:
+  - stage: Build
+    displayName: 'Build Applications'
+    jobs:
+      - job: BuildJob
+        steps:
+          - task: NodeTool@0
+            displayName: "Install node 18.x"
+            inputs:
+              versionSpec: '18.20.2'
+
+          - script: npm install -g yarn@1.22.19
+            displayName: "Install yarn 1.22.19"
+
+          - task: Cache@2
+            inputs:
+              key: '"yarn" | "$(Agent.OS)" | src/yarn.lock'
+              restoreKeys: |
+                "yarn" | "$(Agent.OS)"
+                "yarn"
+              path: $(YARN_CACHE_FOLDER)
+            displayName: Cache Yarn packages
+
+          - script: |
+              cd src/apps/mobile
+              yarn install
+            displayName: "Install mobile dependencies"
+
+          - script: |
+              cd src/apps/mobile
+              export NEXT_PUBLIC_ENTRA_CLIENT_ID="$(ENTRA_CLIENT_ID)"
+              export NEXT_PUBLIC_ENTRA_AUTHORITY="$(ENTRA_AUTHORITY)"
+              export NEXT_PUBLIC_ENTRA_REDIRECT_URI="$(ENTRA_REDIRECT_URI)"
+              export NEXT_PUBLIC_ENTRA_POST_LOGOUT_URI="$(ENTRA_POST_LOGOUT_URI)"
+              export NEXT_PUBLIC_ENTRA_SCOPE_BACKEND="$(ENTRA_SCOPE_BACKEND)"
+              export NEXT_PUBLIC_API_BASE_URL="$(API_BASE_URL)"
+              yarn build
+            displayName: "Build mobile"
+
+          - script: |
+              cd src/apps/web
+              yarn install
+            displayName: "Install web dependencies"
+
+          - script: |
+              cd src/apps/web
+              export NEXT_PUBLIC_ENTRA_CLIENT_ID="$(ENTRA_CLIENT_ID)"
+              export NEXT_PUBLIC_ENTRA_AUTHORITY="$(ENTRA_AUTHORITY)"
+              export NEXT_PUBLIC_ENTRA_REDIRECT_URI="$(ENTRA_REDIRECT_URI)"
+              export NEXT_PUBLIC_ENTRA_POST_LOGOUT_URI="$(ENTRA_POST_LOGOUT_URI)"
+              export NEXT_PUBLIC_ENTRA_SCOPE_BACKEND="$(ENTRA_SCOPE_BACKEND)"
+              export NEXT_PUBLIC_API_BASE_URL="$(API_BASE_URL)"              
+              yarn build
+            displayName: "Build web"
+
+          - publish: $(System.DefaultWorkingDirectory)/src/apps/mobile/out
+            artifact: mobile-drop
+            displayName: "Publish mobile artifact"
+
+          - publish: $(System.DefaultWorkingDirectory)/src/apps/web/out
+            artifact: web-drop
+            displayName: "Publish web artifact"
+
+  - stage: UploadToS3
+    displayName: 'Upload Artifacts to S3'
+    dependsOn: Build
+    jobs:
+      - job: UploadJob
+        timeoutInMinutes: 10
+        steps:
+          - task: DownloadPipelineArtifact@2
+            inputs:
+              artifact: mobile-drop
+              path: $(Pipeline.Workspace)/mobile
+
+          - task: DownloadPipelineArtifact@2
+            inputs:
+              artifact: web-drop
+              path: $(Pipeline.Workspace)/web
+          - task: Bash@3
+            displayName: "List downloaded artifacts"
+            inputs:
+              targetType: 'inline'
+              script: |
+                echo "📁 Listing contents of mobile:"
+                ls -R $(Pipeline.Workspace)/mobile || echo "No files found or directory missing"
+
+                echo "📁 Listing contents of web:"
+                ls -R $(Pipeline.Workspace)/web || echo "No files found or directory missing"
+
+                echo "📄 Sample files in mobile:"
+                find $(Pipeline.Workspace)/mobile -type f | head -10
+
+                echo "📄 Sample files in web:"
+                find $(Pipeline.Workspace)/web -type f | head -10
+
+
+          - task: AWSCLI@1
+            displayName: 'Upload MOBILE to S3'
+            inputs:
+              awsCredentials: 'mbta-dev'
+              regionName: 'us-east-1'
+              awsCommand: 's3'
+              awsSubCommand: 'cp'
+              awsArguments: '--recursive "$(Pipeline.Workspace)/mobile/" "s3://$(BUCKET_NAME_MOBILE)/"'
+              failOnStandardError: true
+
+          - task: AWSCLI@1
+            displayName: 'Upload WEB to S3'
+            inputs:
+              awsCredentials: 'mbta-dev'
+              regionName: 'us-east-1'
+              awsCommand: 's3'
+              awsSubCommand: 'cp'
+              awsArguments: '--recursive "$(Pipeline.Workspace)/web/" "s3://$(BUCKET_NAME_WEB)/"'
+              failOnStandardError: true
