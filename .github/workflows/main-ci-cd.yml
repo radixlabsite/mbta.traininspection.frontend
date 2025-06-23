@@ -12,7 +12,6 @@ permissions:
   id-token: write # Required for OIDC
   contents: read
 
-
 jobs:
   # Job para o ambiente de Desenvolvimento
   run-dev-workflow:
