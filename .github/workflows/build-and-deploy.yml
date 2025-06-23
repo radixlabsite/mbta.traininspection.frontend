@@ -1,7 +1,7 @@
 name: Build and Deploy to S3
 
 on:
-  workflow_dispatch:  # Permite execução manual
+  workflow_dispatch: {}  # Permite execução manual
   push:
     branches:
       - develop
@@ -12,12 +12,12 @@ env:
   AWS_REGION: 'us-east-1'
   BUCKET_NAME_MOBILE: 'mobile-dev-rdi-mbta'
   BUCKET_NAME_WEB: 'web-dev-rdi-mbta'
-  ENTRA_CLIENT_ID: '2f24db68-3efb-49bd-8147-12b22cc66f58'
-  ENTRA_AUTHORITY: 'https://login.microsoftonline.com/e3321345-9cfc-4d86-bb58-b5c71da0329d'
+  ENTRA_CLIENT_ID: '888888-999999'
+  ENTRA_AUTHORITY: 'https://login.microsoftonline.com/111111-222222'
   ENTRA_REDIRECT_URI: 'https://web.dev-rdi.radixlabs.site'
   ENTRA_POST_LOGOUT_URI: '/login'
-  ENTRA_SCOPE_BACKEND: 'api://62adb8df-d29a-4c85-854a-414b5d340af5/.default'
-  API_BASE_URL: 'https://backend.dev-rdi.radixlabs.site/api'
+  ENTRA_SCOPE_BACKEND: 'api://333333-444444/.default'
+  API_BASE_URL: 'https://backend500.dev-rdi.radixlabs.site/api'
 
 
 permissions:
