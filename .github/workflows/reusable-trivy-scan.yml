@@ -11,7 +11,7 @@ on:
         description: 'Severities to fail on'
         required: false
         type: string
-        default: 'HIGH,CRITICAL'
+        default: 'LOW,MEDIUM,HIGH,CRITICAL'
       # Defines what to scan for. vuln=vulnerabilities, config=misconfigurations, secret=exposed secrets
       security-checks:
         description: 'Types of security checks to perform'
@@ -50,7 +50,7 @@ jobs:
           output: 'trivy-results.sarif'
           
           # Ignore vulnerabilities that don't have a fix yet
-          ignore-unfixed: true
+          ignore-unfixed: false
 
       # Step 3: Upload the SARIF file to the GitHub Security tab
       # This provides a nice UI for viewing vulnerabilities under your repo's "Security" > "Code scanning" tab
