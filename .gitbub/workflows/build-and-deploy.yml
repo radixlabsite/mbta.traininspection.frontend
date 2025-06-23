@@ -1,0 +1,147 @@
+name: Build and Deploy to S3
+
+on:
+  push:
+    branches:
+      - develop
+  workflow_dispatch:  # Permite execução manual
+
+env:
+  YARN_CACHE_FOLDER: .yarn
+  AWS_REGION: 'us-east-1'
+  BUCKET_NAME_MOBILE: 'mobile-dev-rdi-mbta'
+  BUCKET_NAME_WEB: 'web-dev-rdi-mbta'
+  ENTRA_CLIENT_ID: '2f24db68-3efb-49bd-8147-12b22cc66f58'
+  ENTRA_AUTHORITY: 'https://login.microsoftonline.com/e3321345-9cfc-4d86-bb58-b5c71da0329d'
+  ENTRA_REDIRECT_URI: 'https://web.dev-rdi.radixlabs.site'
+  ENTRA_POST_LOGOUT_URI: '/login'
+  ENTRA_SCOPE_BACKEND: 'api://62adb8df-d29a-4c85-854a-414b5d340af5/.default'
+  API_BASE_URL: 'https://backend.dev-rdi.radixlabs.site/api'
+
+
+permissions:
+  id-token: write # Required for OIDC
+  contents: read      
+
+jobs:
+  build:
+    name: Build Applications
+    runs-on: ubuntu-latest
+    environment: dev
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 18.20.2
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18.20.2'
+
+      - name: Install Yarn 1.22.19
+        run: npm install -g yarn@1.22.19
+
+      - name: Cache Yarn packages
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.YARN_CACHE_FOLDER }}
+          key: yarn-${{ runner.os }}-${{ hashFiles('src/yarn.lock') }}
+          restore-keys: |
+            yarn-${{ runner.os }}-
+            yarn-
+
+      - name: Install mobile dependencies
+        run: |
+          cd src/apps/mobile
+          yarn install
+
+      - name: Build mobile
+        run: |
+          cd src/apps/mobile
+          export NEXT_PUBLIC_ENTRA_CLIENT_ID="${{ env.ENTRA_CLIENT_ID }}"
+          export NEXT_PUBLIC_ENTRA_AUTHORITY="${{ env.ENTRA_AUTHORITY }}"
+          export NEXT_PUBLIC_ENTRA_REDIRECT_URI="${{ env.ENTRA_REDIRECT_URI }}"
+          export NEXT_PUBLIC_ENTRA_POST_LOGOUT_URI="${{ env.ENTRA_POST_LOGOUT_URI }}"
+          export NEXT_PUBLIC_ENTRA_SCOPE_BACKEND="${{ env.ENTRA_SCOPE_BACKEND }}"
+          export NEXT_PUBLIC_API_BASE_URL="${{ env.API_BASE_URL }}"
+          yarn build
+
+      - name: Install web dependencies
+        run: |
+          cd src/apps/web
+          yarn install
+
+      - name: Build web
+        run: |
+          cd src/apps/web
+          export NEXT_PUBLIC_ENTRA_CLIENT_ID="${{ env.ENTRA_CLIENT_ID }}"
+          export NEXT_PUBLIC_ENTRA_AUTHORITY="${{ env.ENTRA_AUTHORITY }}"
+          export NEXT_PUBLIC_ENTRA_REDIRECT_URI="${{ env.ENTRA_REDIRECT_URI }}"
+          export NEXT_PUBLIC_ENTRA_POST_LOGOUT_URI="${{ env.ENTRA_POST_LOGOUT_URI }}"
+          export NEXT_PUBLIC_ENTRA_SCOPE_BACKEND="${{ env.ENTRA_SCOPE_BACKEND }}"
+          export NEXT_PUBLIC_API_BASE_URL="${{ env.API_BASE_URL }}"
+          yarn build
+
+      - name: Upload mobile artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: mobile-drop
+          path: src/apps/mobile/out
+
+      - name: Upload web artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: web-drop
+          path: src/apps/web/out
+
+  upload-to-s3:
+    name: Upload Artifacts to S3
+    runs-on: ubuntu-latest
+    needs: build
+    timeout-minutes: 10
+    environment: dev
+    
+    steps:
+      - name: Download mobile artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: mobile-drop
+          path: ./mobile
+
+      - name: Download web artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: web-drop
+          path: ./web
+
+      - name: List downloaded artifacts
+        run: |
+          echo "📁 Listing contents of mobile:"
+          ls -R ./mobile || echo "No files found or directory missing"
+          
+          echo "📁 Listing contents of web:"
+          ls -R ./web || echo "No files found or directory missing"
+          
+          echo "📄 Sample files in mobile:"
+          find ./mobile -type f | head -10
+          
+          echo "📄 Sample files in web:"
+          find ./web -type f | head -10
+
+      - name: Configure AWS credentials  via OIDC
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - name: Verify AWS access
+        run: aws sts get-caller-identity
+
+
+      - name: Upload MOBILE to S3
+        run: |
+          aws s3 cp --recursive ./mobile/ s3://${{ env.BUCKET_NAME_MOBILE }}/
+
+      - name: Upload WEB to S3
+        run: |
+          aws s3 cp --recursive ./web/ s3://${{ env.BUCKET_NAME_WEB }}/
