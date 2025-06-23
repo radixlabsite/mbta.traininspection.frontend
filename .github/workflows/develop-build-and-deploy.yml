@@ -111,6 +111,7 @@ jobs:
 
           echo "📁 Listing contents of web:"
           ls -R ./web || echo "No files found or directory missing"
+          
 
       - name: Configure AWS credentials  via OIDC
         uses: aws-actions/configure-aws-credentials@v4
