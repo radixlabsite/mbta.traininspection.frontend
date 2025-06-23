@@ -1,30 +1,26 @@
 name: Build and Deploy to S3
 
 on:
-  workflow_dispatch: {}  # Permite execução manual
+  workflow_dispatch: {} # Permite execução manual
   push:
     branches:
       - develop
 
-
 env:
   YARN_CACHE_FOLDER: .yarn
-  PROJECT: 'rdi-mbta'
-  
-
+  BUCKET_NAME_MOBILE: "mobile-dev-rdi-mbta"
+  BUCKET_NAME_WEB: "web-dev-rdi-mbta"
 
 permissions:
   id-token: write # Required for OIDC
-  contents: read      
+  contents: read
 
 jobs:
   build:
     name: Build Applications
     runs-on: ubuntu-latest
-    environment:  ${{ env.ENVIRONMENT }}
-    env:
-      ENVIRONMENT: ${{  github.ref_name == 'develop' && 'dev' || dev }}
-    
+    environment: dev
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -32,7 +28,7 @@ jobs:
       - name: Setup Node.js 18.20.2
         uses: actions/setup-node@v4
         with:
-          node-version: '18.20.2'
+          node-version: "18.20.2"
 
       - name: Install Yarn 1.22.19
         run: npm install -g yarn@1.22.19
@@ -95,12 +91,8 @@ jobs:
     runs-on: ubuntu-latest
     needs: build
     timeout-minutes: 10
-    env:
-      ENVIRONMENT: ${{  github.ref_name == 'develop' && 'dev' || dev }}
-      BUCKET_NAME_WEB: web-${{ env.ENVIRONMENT }}-${{ env.PROJECT }}
-      BUCKET_NAME_MOBILE: mobile-${{ env.ENVIRONMENT }}-${{ env.PROJECT }}
+    environment: dev
 
-    
     steps:
       - name: Download mobile artifacts
         uses: actions/download-artifact@v4
@@ -118,13 +110,13 @@ jobs:
         run: |
           echo "📁 Listing contents of mobile:"
           ls -R ./mobile || echo "No files found or directory missing"
-          
+
           echo "📁 Listing contents of web:"
           ls -R ./web || echo "No files found or directory missing"
-          
+
           echo "📄 Sample files in mobile:"
           find ./mobile -type f | head -10
-          
+
           echo "📄 Sample files in web:"
           find ./web -type f | head -10
 
@@ -136,7 +128,6 @@ jobs:
 
       - name: Verify AWS access
         run: aws sts get-caller-identity
-
 
       - name: Upload MOBILE to S3
         run: |
