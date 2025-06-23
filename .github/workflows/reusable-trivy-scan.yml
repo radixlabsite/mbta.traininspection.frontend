@@ -19,11 +19,6 @@ on:
         type: string
         default: 'vuln,secret'
 
-# Permissions needed for the job
-permissions:
-  contents: read          # To check out the repository's code
-  security-events: write # To upload scan results to GitHub Security tab
-
 jobs:
   trivy-filesystem-scan:
     name: Trivy Filesystem Scan
