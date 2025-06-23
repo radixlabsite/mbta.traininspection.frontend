@@ -1,4 +1,4 @@
-name: Build and Deploy to S3
+name: Build and Deploy to S3 Development
 
 on:
   workflow_dispatch: {} # Permite execução manual
@@ -8,8 +8,6 @@ on:
 
 env:
   YARN_CACHE_FOLDER: .yarn
-  BUCKET_NAME_MOBILE: "mobile-dev-rdi-mbta"
-  BUCKET_NAME_WEB: "web-dev-rdi-mbta"
 
 permissions:
   id-token: write # Required for OIDC
@@ -20,7 +18,7 @@ jobs:
     name: Build Applications
     runs-on: ubuntu-latest
     environment: dev
-
+    
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -92,7 +90,7 @@ jobs:
     needs: build
     timeout-minutes: 10
     environment: dev
-
+    
     steps:
       - name: Download mobile artifacts
         uses: actions/download-artifact@v4
@@ -131,8 +129,8 @@ jobs:
 
       - name: Upload MOBILE to S3
         run: |
-          aws s3 cp --recursive ./mobile/ s3://${{ env.BUCKET_NAME_MOBILE }}/
+          aws s3 cp --recursive ./mobile/ s3://${{ vars.BUCKET_NAME_MOBILE }}/
 
       - name: Upload WEB to S3
         run: |
-          aws s3 cp --recursive ./web/ s3://${{ env.BUCKET_NAME_WEB }}/
+          aws s3 cp --recursive ./web/ s3://${{ vars.BUCKET_NAME_WEB }}/
