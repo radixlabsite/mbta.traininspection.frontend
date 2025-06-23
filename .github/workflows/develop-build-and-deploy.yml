@@ -132,7 +132,7 @@ jobs:
   invalidate-cloudfront:
     name: 🚀 Invalidate CloudFront Cache
     runs-on: ubuntu-latest
-    if: ${{ needs.upload-to-s3.result == 'success' }}
+    needs: upload-to-s3
     environment: dev
     steps:
       - name: Configure AWS credentials via OIDC
