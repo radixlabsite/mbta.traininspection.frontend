@@ -25,7 +25,7 @@ jobs:
     with:
       # You can customize the inputs here if needed
       severity: 'HIGH,CRITICAL'
-      security-checks: 'vuln,secret'
+      #security-checks: 'vuln,secret'
 
   # Job para o ambiente de Desenvolvimento
   run-dev-workflow:
