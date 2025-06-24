@@ -1,23 +1,16 @@
 name: ⚙️ Scan Code with Trivy
 
 on:
-  workflow_dispatch:  
-  push:  # Add this temporarily
-  branches:
-    - develop  # or your default branch
+  workflow_dispatch:
 
 permissions:
   contents: read
-  security-events: write   # Necessário para fazer o upload do SARIF
-  actions: read            # Necessário para o upload do SARIF ler dados do run
-
+  security-events: write
+  actions: read
 
 jobs:
-
   security-scan:
     name: 🛡️ Scan Code with Trivy
     uses: ./.github/workflows/reusable-trivy-scan.yml
     with:
       severity: 'HIGH,CRITICAL'
-
-
