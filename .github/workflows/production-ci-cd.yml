@@ -1,0 +1,25 @@
+name: ⚙️ CI/CD - Frontend Applications Production
+ 
+on:
+  workflow_dispatch: {}
+  push:
+    branches:
+      - main
+
+permissions:
+  id-token: write # Required for OIDC
+  contents: read
+
+jobs:
+  # Job para o ambiente de Produção
+  run-prd-workflow:
+    if: github.ref == 'refs/heads/main'
+    name: 🚀 Deploy to Production
+    # A linha "environment: production" foi REMOVIDA daqui.
+    # A regra de aprovação será acionada porque o workflow reutilizável
+    # usa o input 'prd' para definir o ambiente internamente.
+    uses: ./.github/workflows/reusable-build-deploy.yml
+    with:
+      environment-name: prd
+    secrets:
+      AWS_ROLE_TO_ASSUME: ${{ secrets.AWS_ROLE_TO_ASSUME_PRD }}
