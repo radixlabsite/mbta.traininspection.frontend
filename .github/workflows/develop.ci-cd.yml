@@ -13,10 +13,8 @@ permissions:
 
 
 jobs:
-
   # Job para o ambiente de Desenvolvimento
   run-dev-workflow:
-    needs: security-scan
     if: github.ref == 'refs/heads/develop'
     name: 🚀 Deploy to Development
     uses: ./.github/workflows/reusable-build-deploy.yml
