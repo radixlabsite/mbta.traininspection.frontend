@@ -10,8 +10,9 @@ on:
         default: 'LOW,MEDIUM,HIGH,CRITICAL'
 
 permissions:
+  contents: read
   security-events: write   # Necessário para fazer o upload do SARIF
-  actions: read              
+  actions: read            # Necessário para o upload do SARIF ler dados do run
 
 jobs:
   trivy-vuln-scan:
