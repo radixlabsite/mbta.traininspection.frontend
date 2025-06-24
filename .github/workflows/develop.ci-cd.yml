@@ -14,7 +14,6 @@ permissions:
   actions: read            # Necessário para o upload do SARIF ler dados do run
 
 
-
 jobs:
 
   # JOB 1: New security scan job that runs first
