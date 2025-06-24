@@ -9,6 +9,10 @@ on:
         type: string
         default: 'LOW,MEDIUM,HIGH,CRITICAL'
 
+permissions:
+  security-events: write   # Necessário para fazer o upload do SARIF
+  actions: read              
+
 jobs:
   trivy-vuln-scan:
     name: Trivy Vulnerability Scan (fs)
