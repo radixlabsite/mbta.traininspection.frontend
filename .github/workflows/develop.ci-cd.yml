@@ -1,4 +1,4 @@
-name: ⚙️ SCAN - Frontend Applications Development
+name: ⚙️ CI/CD - Frontend Applications Development
 
 on:
   workflow_dispatch: {}
@@ -6,6 +6,7 @@ on:
     branches:
       - develop
       
+
 permissions:
   id-token: write # Required for OIDC
   contents: read
@@ -13,14 +14,11 @@ permissions:
   actions: read            # Necessário para o upload do SARIF ler dados do run
 
 jobs:
-
-  # JOB 1: New security scan job that runs first
-  security-scan:
-    name: 🛡️ Scan Code with Trivy
-    # This calls your new reusable workflow
-    uses: ./.github/workflows/reusable-trivy-scan.yml
+  run-dev-workflow:
+    if: github.ref == 'refs/heads/develop'
+    name: 🚀 Deploy to Development
+    uses: ./.github/workflows/reusable-build-deploy.yml
     with:
-      # You can customize the inputs here if needed
-      severity: 'HIGH,CRITICAL'
-      
-
+      environment-name: dev
+    secrets:
+      AWS_ROLE_TO_ASSUME: ${{ secrets.AWS_ROLE_TO_ASSUME_DEV }}
