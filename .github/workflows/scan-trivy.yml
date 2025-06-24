@@ -1,4 +1,4 @@
-name: ⚙️ CI/CD - Frontend Applications Development
+name: ⚙️ Scan Code with Trivy
 
 on:
   workflow_dispatch:       
