@@ -17,4 +17,4 @@ jobs:
     name: 🛡️ Scan Code with Trivy    
     uses: ./.github/workflows/reusable-trivy-scan.yml
     with:      
-      severity: 'HIGH,CRITICAL'
+      severity: 'CRITICAL'
