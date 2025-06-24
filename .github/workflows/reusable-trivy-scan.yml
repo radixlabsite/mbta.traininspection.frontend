@@ -7,12 +7,12 @@ on:
         description: 'Severities to fail on'
         required: false
         type: string
-        default: 'LOW,MEDIUM,HIGH,CRITICAL'
+        default: 'CRITICAL'
 
 permissions:
   contents: read
-  security-events: write   # Necessário para fazer o upload do SARIF
-  actions: read            # Necessário para o upload do SARIF ler dados do run
+  security-events: write  
+  actions: read            
 
 jobs:
   trivy-vuln-scan:
