@@ -29,18 +29,24 @@ jobs:
           output: 'trivy-vuln.sarif'
           ignore-unfixed: false
 
+      - name: 📄 Mostrar resumo dos findings de vulnerabilidades
+        run: |
+          echo "=== Trivy Vulnerabilities (SARIF) ==="
+          if [[ -s trivy-vuln.sarif ]]; then
+            count=$(jq '.runs[].results | length' trivy-vuln.sarif)
+            echo "🔍 Total de vulnerabilidades encontradas: $count"
+            echo ""
+            echo "🧾 Primeiras 50 linhas do SARIF:"
+            head -n 50 trivy-vuln.sarif
+          else
+            echo "⚠️ Arquivo trivy-vuln.sarif está vazio ou não foi gerado corretamente."
+          fi
+
       - name: Upload vuln results to GitHub Security tab
         uses: github/codeql-action/upload-sarif@v3
         if: always()
         with:
           sarif_file: 'trivy-vuln.sarif'
-
-      - name: Upload SARIF as downloadable artifact
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: trivy-vuln-report
-          path: trivy-vuln.sarif
 
   trivy-secret-config-scan:
     name: Trivy Secrets & Config Scan
@@ -58,15 +64,21 @@ jobs:
           format: 'sarif'
           output: 'trivy-config.sarif'
 
+      - name: 📄 Mostrar resumo dos findings de secrets/config
+        run: |
+          echo "=== Trivy Config/Secrets (SARIF) ==="
+          if [[ -s trivy-config.sarif ]]; then
+            count=$(jq '.runs[].results | length' trivy-config.sarif)
+            echo "🔍 Total de findings (config/secrets): $count"
+            echo ""
+            echo "🧾 Primeiras 50 linhas do SARIF:"
+            head -n 50 trivy-config.sarif
+          else
+            echo "⚠️ Arquivo trivy-config.sarif está vazio ou não foi gerado corretamente."
+          fi
+
       - name: Upload config results to GitHub Security tab
         uses: github/codeql-action/upload-sarif@v3
         if: always()
         with:
           sarif_file: 'trivy-config.sarif'
-
-      - name: Upload Config SARIF as downloadable artifact
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: trivy-config-report
-          path: trivy-config.sarif
