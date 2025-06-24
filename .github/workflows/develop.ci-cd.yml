@@ -10,6 +10,8 @@ on:
 permissions:
   id-token: write # Required for OIDC
   contents: read
+  security-events: write   # Necessário para fazer o upload do SARIF
+  actions: read            # Necessário para o upload do SARIF ler dados do run
 
 
 
